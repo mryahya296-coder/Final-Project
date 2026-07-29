@@ -211,6 +211,13 @@ a { color: var(--forest); }
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+.borrower-fields {
+  background: var(--forest-pale);
+  padding: 12px 10px 2px;
+  border-radius: var(--radius);
+  border-left: 3px solid var(--oxblood);
+  margin-bottom: 14px;
+}
 label {
   display: block;
   font-family: var(--font-mono);
@@ -374,6 +381,18 @@ input.invalid { border-color: var(--oxblood); background: #fbeceb; }
 }
 .status-available { color: var(--forest); }
 .status-issued { color: var(--oxblood); }
+
+.borrower-note {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--oxblood);
+  background: #fbeceb;
+  border: 1px dashed var(--oxblood-light);
+  border-radius: 2px;
+  padding: 6px 8px;
+  line-height: 1.5;
+}
+.borrower-note b { color: var(--ink); }
 
 .book-card-actions {
   display: flex;

@@ -91,6 +91,19 @@
             </select>
           </div>
 
+          <div class="field-row borrower-fields" id="borrowerFields" hidden>
+            <div class="field">
+              <label for="borrowerName">Issued To (Name)</label>
+              <input type="text" id="borrowerName" placeholder="e.g. Ahmed Khan" autocomplete="off">
+              <span class="field-error" id="err-borrowerName"></span>
+            </div>
+            <div class="field">
+              <label for="borrowerContact">Contact Number</label>
+              <input type="text" id="borrowerContact" placeholder="e.g. 0300-1234567" inputmode="tel" autocomplete="off">
+              <span class="field-error" id="err-borrowerContact"></span>
+            </div>
+          </div>
+
           <div class="ticket-actions">
             <button type="submit" class="btn btn-primary" id="submitBtn">Stamp &amp; File Book</button>
             <button type="button" class="btn btn-ghost" id="cancelEditBtn" hidden>Cancel Edit</button>

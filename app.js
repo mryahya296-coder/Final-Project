@@ -15,6 +15,9 @@ const categoryInput    = document.getElementById("category");
 const yearInput        = document.getElementById("year");
 const isbnInput        = document.getElementById("isbn");
 const statusSelect     = document.getElementById("status");
+const borrowerFields       = document.getElementById("borrowerFields");
+const borrowerNameInput    = document.getElementById("borrowerName");
+const borrowerContactInput = document.getElementById("borrowerContact");
 
 const submitBtn        = document.getElementById("submitBtn");
 const cancelEditBtn     = document.getElementById("cancelEditBtn");
@@ -65,7 +68,33 @@ function loadBooksFromStorage() {
 }
 
 function saveBooksToStorage() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(libraryBooks));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(libraryBooks));
+  } catch (error) {
+    console.error("Local Storage save failed:", error);
+    showToast(
+      "Could not save to Local Storage. Your browser may be blocking it on this page.",
+      "error"
+    );
+  }
+}
+
+/* ============================================================
+   BORROWER FIELDS VISIBILITY
+   ============================================================ */
+
+// Shows the "Issued To" name/contact fields only when the status is "Issued".
+function refreshBorrowerFieldsVisibility() {
+  const isIssued = statusSelect.value === "Issued";
+  borrowerFields.hidden = !isIssued;
+  if (!isIssued) {
+    borrowerNameInput.value = "";
+    borrowerContactInput.value = "";
+    document.getElementById("err-borrowerName").textContent = "";
+    document.getElementById("err-borrowerContact").textContent = "";
+    borrowerNameInput.classList.remove("invalid");
+    borrowerContactInput.classList.remove("invalid");
+  }
 }
 
 /* ============================================================
@@ -74,7 +103,7 @@ function saveBooksToStorage() {
 
 // Clears every inline error message and "invalid" input highlight.
 function clearValidationErrors() {
-  const errorFieldIds = ["title", "author", "category", "year", "isbn"];
+  const errorFieldIds = ["title", "author", "category", "year", "isbn", "borrowerName", "borrowerContact"];
   errorFieldIds.forEach(function (fieldId) {
     const errorLabel = document.getElementById("err-" + fieldId);
     const inputField = document.getElementById(fieldId);
@@ -142,6 +171,29 @@ function validateBookForm() {
     }
   }
 
+  const status = statusSelect.value;
+  let borrowerName = "";
+  let borrowerContact = "";
+
+  if (status === "Issued") {
+    borrowerName = borrowerNameInput.value.trim();
+    borrowerContact = borrowerContactInput.value.trim();
+
+    if (borrowerName === "") {
+      showFieldError("borrowerName", "Enter who this book is issued to.");
+      isValid = false;
+    }
+
+    const contactPattern = /^[0-9+\-\s()]{7,}$/;
+    if (borrowerContact === "") {
+      showFieldError("borrowerContact", "Enter a contact number.");
+      isValid = false;
+    } else if (!contactPattern.test(borrowerContact)) {
+      showFieldError("borrowerContact", "Enter a valid contact number.");
+      isValid = false;
+    }
+  }
+
   if (!isValid) {
     return null;
   }
@@ -152,7 +204,9 @@ function validateBookForm() {
     category: category,
     year: yearNumber,
     isbn: isbn,
-    status: statusSelect.value
+    status: status,
+    borrowerName: borrowerName,
+    borrowerContact: borrowerContact
   };
 }
 
@@ -215,6 +269,10 @@ function createBookCardElement(book) {
       "<span><b>Published:</b> " + escapeHtml(String(book.year)) + "</span>" +
     "</div>" +
     buildStatusBadge(book.status) +
+    (book.status === "Issued"
+      ? '<p class="borrower-note"><b>Issued to:</b> ' + escapeHtml(book.borrowerName) +
+        '<br><b>Contact:</b> ' + escapeHtml(book.borrowerContact) + "</p>"
+      : "") +
     '<div class="book-card-actions">' +
       '<button class="btn btn-ghost edit-btn" type="button">Edit</button>' +
       '<button class="btn btn-danger delete-btn" type="button">Delete</button>' +
@@ -329,6 +387,7 @@ function resetForm() {
   bookForm.reset();
   bookIdField.value = "";
   clearValidationErrors();
+  refreshBorrowerFieldsVisibility();
   formTitle.textContent = "New Accession Slip";
   submitBtn.textContent = "Stamp & File Book";
   cancelEditBtn.hidden = true;
@@ -347,6 +406,9 @@ function beginEditBook(isbn) {
   yearInput.value = book.year;
   isbnInput.value = book.isbn;
   statusSelect.value = book.status;
+  refreshBorrowerFieldsVisibility();
+  borrowerNameInput.value = book.borrowerName || "";
+  borrowerContactInput.value = book.borrowerContact || "";
 
   formTitle.textContent = "Editing Catalog Card";
   submitBtn.textContent = "Update Book";
@@ -445,6 +507,7 @@ function showToast(message, type) {
 
 bookForm.addEventListener("submit", handleFormSubmit);
 cancelEditBtn.addEventListener("click", resetForm);
+statusSelect.addEventListener("change", refreshBorrowerFieldsVisibility);
 
 searchInput.addEventListener("input", renderBookGrid);
 categoryFilter.addEventListener("change", renderBookGrid);
@@ -467,7 +530,24 @@ document.addEventListener("keydown", function (event) {
    INITIALIZATION
    ============================================================ */
 
+function isLocalStorageAvailable() {
+  try {
+    const testKey = "__storage_test__";
+    localStorage.setItem(testKey, "1");
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function initializeApp() {
+  if (!isLocalStorageAvailable()) {
+    showToast(
+      "Local Storage is blocked in this browser context — books won't be saved after refresh. Try opening this file through a local server instead of double-clicking it.",
+      "error"
+    );
+  }
   libraryBooks = loadBooksFromStorage();
   renderAll();
 }
