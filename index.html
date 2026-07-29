@@ -91,16 +91,23 @@
             </select>
           </div>
 
-          <div class="field-row borrower-fields" id="borrowerFields" hidden>
-            <div class="field">
-              <label for="borrowerName">Issued To (Name)</label>
-              <input type="text" id="borrowerName" placeholder="e.g. Ahmed Khan" autocomplete="off">
-              <span class="field-error" id="err-borrowerName"></span>
+          <div class="borrower-fields" id="borrowerFields" hidden>
+            <div class="field-row">
+              <div class="field">
+                <label for="borrowerName">Issued To (Name)</label>
+                <input type="text" id="borrowerName" placeholder="e.g. Ahmed Khan" autocomplete="off">
+                <span class="field-error" id="err-borrowerName"></span>
+              </div>
+              <div class="field">
+                <label for="borrowerContact">Contact Number</label>
+                <input type="text" id="borrowerContact" placeholder="e.g. 0300-1234567" inputmode="tel" autocomplete="off">
+                <span class="field-error" id="err-borrowerContact"></span>
+              </div>
             </div>
             <div class="field">
-              <label for="borrowerContact">Contact Number</label>
-              <input type="text" id="borrowerContact" placeholder="e.g. 0300-1234567" inputmode="tel" autocomplete="off">
-              <span class="field-error" id="err-borrowerContact"></span>
+              <label for="issuedDate">Issued Date</label>
+              <input type="date" id="issuedDate">
+              <span class="field-error" id="err-issuedDate"></span>
             </div>
           </div>
 
@@ -114,36 +121,82 @@
 
     <!-- CATALOG DRAWER -->
     <section class="catalog-panel" aria-labelledby="catalogTitle">
-      <div class="catalog-toolbar">
-        <h2 id="catalogTitle">The Drawer</h2>
 
-        <div class="toolbar-controls">
-          <div class="search-wrap">
-            <input type="search" id="searchInput" placeholder="Search title or author…">
+      <div class="catalog-tabs" role="tablist">
+        <button type="button" class="tab-btn active" id="tabAllBtn" data-tab="all" role="tab" aria-selected="true">
+          All Books
+        </button>
+        <button type="button" class="tab-btn" id="tabIssuedBtn" data-tab="issued" role="tab" aria-selected="false">
+          Issued Books <span class="tab-count" id="issuedTabCount">0</span>
+        </button>
+      </div>
+
+      <!-- ALL BOOKS VIEW -->
+      <div id="allBooksView">
+        <div class="catalog-toolbar">
+          <h2 id="catalogTitle">The Drawer</h2>
+
+          <div class="toolbar-controls">
+            <div class="search-wrap">
+              <input type="search" id="searchInput" placeholder="Search title or author…">
+            </div>
+            <select id="categoryFilter">
+              <option value="">All Categories</option>
+            </select>
+            <select id="sortSelect">
+              <option value="title-asc">Title A–Z</option>
+              <option value="title-desc">Title Z–A</option>
+              <option value="year-desc">Newest First</option>
+              <option value="year-asc">Oldest First</option>
+            </select>
           </div>
-          <select id="categoryFilter">
-            <option value="">All Categories</option>
-          </select>
-          <select id="sortSelect">
-            <option value="title-asc">Title A–Z</option>
-            <option value="title-desc">Title Z–A</option>
-            <option value="year-desc">Newest First</option>
-            <option value="year-asc">Oldest First</option>
-          </select>
+        </div>
+
+        <div id="emptyState" class="empty-state" hidden>
+          <div class="empty-stamp">EMPTY</div>
+          <p>No cards in this drawer yet. File your first book on the left.</p>
+        </div>
+
+        <div id="noResultsState" class="empty-state" hidden>
+          <div class="empty-stamp">NOT&nbsp;FOUND</div>
+          <p>No book matches that search or filter.</p>
+        </div>
+
+        <div class="card-grid" id="cardGrid"></div>
+      </div>
+
+      <!-- ISSUED BOOKS LEDGER VIEW -->
+      <div id="issuedBooksView" hidden>
+        <div class="catalog-toolbar">
+          <h2>Issue Ledger</h2>
+          <div class="toolbar-controls">
+            <div class="search-wrap">
+              <input type="search" id="issuedSearchInput" placeholder="Search borrower or book…">
+            </div>
+          </div>
+        </div>
+
+        <div id="issuedEmptyState" class="empty-state" hidden>
+          <div class="empty-stamp">CLEAR</div>
+          <p>No books are currently checked out.</p>
+        </div>
+
+        <div class="ledger-wrap" id="ledgerWrap" hidden>
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>Book</th>
+                <th>Issued To</th>
+                <th>Contact</th>
+                <th>Issued Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="issuedLedgerBody"></tbody>
+          </table>
         </div>
       </div>
 
-      <div id="emptyState" class="empty-state" hidden>
-        <div class="empty-stamp">EMPTY</div>
-        <p>No cards in this drawer yet. File your first book on the left.</p>
-      </div>
-
-      <div id="noResultsState" class="empty-state" hidden>
-        <div class="empty-stamp">NOT&nbsp;FOUND</div>
-        <p>No book matches that search or filter.</p>
-      </div>
-
-      <div class="card-grid" id="cardGrid"></div>
     </section>
 
   </main>

@@ -313,6 +313,91 @@ input.invalid { border-color: var(--oxblood); background: #fbeceb; }
   gap: 16px;
 }
 
+/* ---------- catalog tabs ---------- */
+.catalog-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--line-strong);
+  margin-bottom: 20px;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 6px;
+  margin-bottom: -2px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab-btn + .tab-btn { margin-left: 14px; }
+.tab-btn:hover { color: var(--forest); }
+.tab-btn.active {
+  color: var(--forest);
+  border-bottom-color: var(--oxblood);
+  font-weight: 600;
+}
+.tab-count {
+  background: var(--oxblood);
+  color: var(--paper);
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  line-height: 1.5;
+}
+
+/* ---------- issue ledger table ---------- */
+.ledger-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+.ledger-table thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  background: var(--forest);
+  padding: 12px 14px;
+}
+.ledger-table tbody tr {
+  border-bottom: 1px dashed var(--line);
+}
+.ledger-table tbody tr:last-child { border-bottom: none; }
+.ledger-table tbody tr:nth-child(even) { background: rgba(168, 121, 47, 0.06); }
+.ledger-table td {
+  padding: 12px 14px;
+  font-size: 0.87rem;
+  vertical-align: middle;
+}
+.ledger-book-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--forest);
+}
+.ledger-table td.ledger-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.ledger-table td.ledger-actions { text-align: right; white-space: nowrap; }
+.ledger-table .btn { padding: 6px 12px; font-size: 11px; }
+
 /* ---------- book index card ---------- */
 .book-card {
   background: var(--card);

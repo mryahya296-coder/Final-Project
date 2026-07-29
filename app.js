@@ -18,6 +18,17 @@ const statusSelect     = document.getElementById("status");
 const borrowerFields       = document.getElementById("borrowerFields");
 const borrowerNameInput    = document.getElementById("borrowerName");
 const borrowerContactInput = document.getElementById("borrowerContact");
+const issuedDateInput      = document.getElementById("issuedDate");
+
+const tabAllBtn        = document.getElementById("tabAllBtn");
+const tabIssuedBtn     = document.getElementById("tabIssuedBtn");
+const allBooksView     = document.getElementById("allBooksView");
+const issuedBooksView  = document.getElementById("issuedBooksView");
+const issuedTabCount   = document.getElementById("issuedTabCount");
+const issuedSearchInput = document.getElementById("issuedSearchInput");
+const issuedEmptyState  = document.getElementById("issuedEmptyState");
+const ledgerWrap         = document.getElementById("ledgerWrap");
+const issuedLedgerBody   = document.getElementById("issuedLedgerBody");
 
 const submitBtn        = document.getElementById("submitBtn");
 const cancelEditBtn     = document.getElementById("cancelEditBtn");
@@ -90,11 +101,25 @@ function refreshBorrowerFieldsVisibility() {
   if (!isIssued) {
     borrowerNameInput.value = "";
     borrowerContactInput.value = "";
+    issuedDateInput.value = "";
     document.getElementById("err-borrowerName").textContent = "";
     document.getElementById("err-borrowerContact").textContent = "";
+    document.getElementById("err-issuedDate").textContent = "";
     borrowerNameInput.classList.remove("invalid");
     borrowerContactInput.classList.remove("invalid");
+    issuedDateInput.classList.remove("invalid");
+  } else if (!issuedDateInput.value) {
+    // Default to today's date so the librarian doesn't have to type it manually.
+    issuedDateInput.value = getTodayDateString();
   }
+}
+
+// Returns today's date formatted as YYYY-MM-DD for the date input's default value.
+function getTodayDateString() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return today.getFullYear() + "-" + month + "-" + day;
 }
 
 /* ============================================================
@@ -103,7 +128,7 @@ function refreshBorrowerFieldsVisibility() {
 
 // Clears every inline error message and "invalid" input highlight.
 function clearValidationErrors() {
-  const errorFieldIds = ["title", "author", "category", "year", "isbn", "borrowerName", "borrowerContact"];
+  const errorFieldIds = ["title", "author", "category", "year", "isbn", "borrowerName", "borrowerContact", "issuedDate"];
   errorFieldIds.forEach(function (fieldId) {
     const errorLabel = document.getElementById("err-" + fieldId);
     const inputField = document.getElementById(fieldId);
@@ -174,10 +199,12 @@ function validateBookForm() {
   const status = statusSelect.value;
   let borrowerName = "";
   let borrowerContact = "";
+  let issuedDate = "";
 
   if (status === "Issued") {
     borrowerName = borrowerNameInput.value.trim();
     borrowerContact = borrowerContactInput.value.trim();
+    issuedDate = issuedDateInput.value;
 
     if (borrowerName === "") {
       showFieldError("borrowerName", "Enter who this book is issued to.");
@@ -190,6 +217,14 @@ function validateBookForm() {
       isValid = false;
     } else if (!contactPattern.test(borrowerContact)) {
       showFieldError("borrowerContact", "Enter a valid contact number.");
+      isValid = false;
+    }
+
+    if (issuedDate === "") {
+      showFieldError("issuedDate", "Select the date this book was issued.");
+      isValid = false;
+    } else if (issuedDate > getTodayDateString()) {
+      showFieldError("issuedDate", "Issued date cannot be in the future.");
       isValid = false;
     }
   }
@@ -206,7 +241,8 @@ function validateBookForm() {
     isbn: isbn,
     status: status,
     borrowerName: borrowerName,
-    borrowerContact: borrowerContact
+    borrowerContact: borrowerContact,
+    issuedDate: issuedDate
   };
 }
 
@@ -250,6 +286,18 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// Formats a YYYY-MM-DD string into a friendlier "Jan 5, 2026" style date.
+function formatDisplayDate(isoDateString) {
+  if (!isoDateString) return "—";
+  const parsedDate = new Date(isoDateString + "T00:00:00");
+  if (isNaN(parsedDate.getTime())) return isoDateString;
+  return parsedDate.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
 function buildStatusBadge(status) {
   const badgeClass = status === "Available" ? "status-available" : "status-issued";
   return '<span class="status-badge ' + badgeClass + '">' + escapeHtml(status) + "</span>";
@@ -271,7 +319,8 @@ function createBookCardElement(book) {
     buildStatusBadge(book.status) +
     (book.status === "Issued"
       ? '<p class="borrower-note"><b>Issued to:</b> ' + escapeHtml(book.borrowerName) +
-        '<br><b>Contact:</b> ' + escapeHtml(book.borrowerContact) + "</p>"
+        '<br><b>Contact:</b> ' + escapeHtml(book.borrowerContact) +
+        '<br><b>Since:</b> ' + escapeHtml(formatDisplayDate(book.issuedDate)) + "</p>"
       : "") +
     '<div class="book-card-actions">' +
       '<button class="btn btn-ghost edit-btn" type="button">Edit</button>' +
@@ -377,6 +426,96 @@ function renderAll() {
   renderCategoryFilterOptions();
   renderBookGrid();
   renderStats();
+  renderIssuedLedger();
+}
+
+/* ============================================================
+   ISSUED BOOKS LEDGER (TAB)
+   ============================================================ */
+
+function getIssuedBooks() {
+  const searchTerm = issuedSearchInput.value.trim().toLowerCase();
+
+  return libraryBooks
+    .filter(function (book) {
+      if (book.status !== "Issued") return false;
+      if (searchTerm === "") return true;
+      return (
+        book.title.toLowerCase().indexOf(searchTerm) !== -1 ||
+        book.borrowerName.toLowerCase().indexOf(searchTerm) !== -1
+      );
+    })
+    .sort(function (a, b) {
+      // Most recently issued first.
+      return (b.issuedDate || "").localeCompare(a.issuedDate || "");
+    });
+}
+
+function createLedgerRow(book) {
+  const row = document.createElement("tr");
+
+  row.innerHTML =
+    "<td class=\"ledger-book-title\">" + escapeHtml(book.title) + "</td>" +
+    "<td>" + escapeHtml(book.borrowerName) + "</td>" +
+    "<td class=\"ledger-mono\">" + escapeHtml(book.borrowerContact) + "</td>" +
+    "<td class=\"ledger-mono\">" + escapeHtml(formatDisplayDate(book.issuedDate)) + "</td>" +
+    "<td class=\"ledger-actions\"><button type=\"button\" class=\"btn btn-primary return-btn\">Mark Returned</button></td>";
+
+  row.querySelector(".return-btn").addEventListener("click", function () {
+    markBookReturned(book.isbn);
+  });
+
+  return row;
+}
+
+function markBookReturned(isbn) {
+  const bookIndex = libraryBooks.findIndex(function (book) {
+    return book.isbn === isbn;
+  });
+  if (bookIndex === -1) return;
+
+  libraryBooks[bookIndex].status = "Available";
+  libraryBooks[bookIndex].borrowerName = "";
+  libraryBooks[bookIndex].borrowerContact = "";
+  libraryBooks[bookIndex].issuedDate = "";
+  saveBooksToStorage();
+
+  showToast('"' + libraryBooks[bookIndex].title + '" marked as returned.', "success");
+
+  // If that book happens to be open in the edit form, reset the form too.
+  if (bookIdField.value === isbn) {
+    resetForm();
+  }
+
+  renderAll();
+}
+
+function renderIssuedLedger() {
+  const issuedBooks = getIssuedBooks();
+  const totalIssuedCount = libraryBooks.filter(function (book) {
+    return book.status === "Issued";
+  }).length;
+
+  issuedTabCount.textContent = totalIssuedCount;
+
+  issuedLedgerBody.innerHTML = "";
+  issuedBooks.forEach(function (book) {
+    issuedLedgerBody.appendChild(createLedgerRow(book));
+  });
+
+  const hasIssuedBooks = issuedBooks.length > 0;
+  ledgerWrap.hidden = !hasIssuedBooks;
+  issuedEmptyState.hidden = hasIssuedBooks;
+}
+
+function switchTab(tabName) {
+  const showAll = tabName === "all";
+  allBooksView.hidden = !showAll;
+  issuedBooksView.hidden = showAll;
+  tabAllBtn.classList.toggle("active", showAll);
+  tabIssuedBtn.classList.toggle("active", !showAll);
+  tabAllBtn.setAttribute("aria-selected", String(showAll));
+  tabIssuedBtn.setAttribute("aria-selected", String(!showAll));
 }
 
 /* ============================================================
@@ -409,6 +548,7 @@ function beginEditBook(isbn) {
   refreshBorrowerFieldsVisibility();
   borrowerNameInput.value = book.borrowerName || "";
   borrowerContactInput.value = book.borrowerContact || "";
+  issuedDateInput.value = book.issuedDate || "";
 
   formTitle.textContent = "Editing Catalog Card";
   submitBtn.textContent = "Update Book";
@@ -512,6 +652,10 @@ statusSelect.addEventListener("change", refreshBorrowerFieldsVisibility);
 searchInput.addEventListener("input", renderBookGrid);
 categoryFilter.addEventListener("change", renderBookGrid);
 sortSelect.addEventListener("change", renderBookGrid);
+
+tabAllBtn.addEventListener("click", function () { switchTab("all"); });
+tabIssuedBtn.addEventListener("click", function () { switchTab("issued"); });
+issuedSearchInput.addEventListener("input", renderIssuedLedger);
 
 confirmDeleteBtn.addEventListener("click", handleConfirmedDelete);
 confirmCancelBtn.addEventListener("click", closeDeleteConfirmation);
