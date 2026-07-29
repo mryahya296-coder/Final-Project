@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Card Catalog — Library Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="drawer-rail" aria-hidden="true">
+  <div class="rail-label">A&nbsp;—&nbsp;Z</div>
+  <div class="rail-label">FICTION</div>
+  <div class="rail-label">REF.</div>
+</div>
+
+<div class="app">
+
+  <header class="masthead">
+    <div class="masthead-left">
+      <span class="eyebrow">Est. Local Storage</span>
+      <h1>The Card&nbsp;Catalog</h1>
+      <p class="tagline">A quiet ledger for every book that passes through your hands.</p>
+    </div>
+    <div class="masthead-stats">
+      <div class="stat">
+        <span class="stat-number" id="statTotal">0</span>
+        <span class="stat-label">Total Titles</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="statAvailable">0</span>
+        <span class="stat-label">On Shelf</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="statIssued">0</span>
+        <span class="stat-label">Checked Out</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- ADD / EDIT CARD -->
+    <section class="ticket-panel" aria-labelledby="formTitle">
+      <div class="ticket">
+        <div class="ticket-hole" aria-hidden="true"></div>
+        <h2 id="formTitle">New Accession Slip</h2>
+        <p class="ticket-sub">Fill in every field to file a book into the catalog.</p>
+
+        <form id="bookForm" novalidate>
+          <input type="hidden" id="bookId">
+
+          <div class="field">
+            <label for="title">Book Title</label>
+            <input type="text" id="title" placeholder="e.g. The Left Hand of Darkness" autocomplete="off">
+            <span class="field-error" id="err-title"></span>
+          </div>
+
+          <div class="field">
+            <label for="author">Author Name</label>
+            <input type="text" id="author" placeholder="e.g. Ursula K. Le Guin" autocomplete="off">
+            <span class="field-error" id="err-author"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="category">Category / Genre</label>
+              <input type="text" id="category" placeholder="e.g. Science Fiction" autocomplete="off">
+              <span class="field-error" id="err-category"></span>
+            </div>
+            <div class="field">
+              <label for="year">Publication Year</label>
+              <input type="text" id="year" placeholder="e.g. 1969" inputmode="numeric" autocomplete="off">
+              <span class="field-error" id="err-year"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="isbn">ISBN Number / Book ID</label>
+            <input type="text" id="isbn" placeholder="e.g. 978-0-441-47812-5" autocomplete="off">
+            <span class="field-error" id="err-isbn"></span>
+          </div>
+
+          <div class="field">
+            <label for="status">Availability Status</label>
+            <select id="status">
+              <option value="Available">Available</option>
+              <option value="Issued">Issued</option>
+            </select>
+          </div>
+
+          <div class="ticket-actions">
+            <button type="submit" class="btn btn-primary" id="submitBtn">Stamp &amp; File Book</button>
+            <button type="button" class="btn btn-ghost" id="cancelEditBtn" hidden>Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- CATALOG DRAWER -->
+    <section class="catalog-panel" aria-labelledby="catalogTitle">
+      <div class="catalog-toolbar">
+        <h2 id="catalogTitle">The Drawer</h2>
+
+        <div class="toolbar-controls">
+          <div class="search-wrap">
+            <input type="search" id="searchInput" placeholder="Search title or author…">
+          </div>
+          <select id="categoryFilter">
+            <option value="">All Categories</option>
+          </select>
+          <select id="sortSelect">
+            <option value="title-asc">Title A–Z</option>
+            <option value="title-desc">Title Z–A</option>
+            <option value="year-desc">Newest First</option>
+            <option value="year-asc">Oldest First</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        <div class="empty-stamp">EMPTY</div>
+        <p>No cards in this drawer yet. File your first book on the left.</p>
+      </div>
+
+      <div id="noResultsState" class="empty-state" hidden>
+        <div class="empty-stamp">NOT&nbsp;FOUND</div>
+        <p>No book matches that search or filter.</p>
+      </div>
+
+      <div class="card-grid" id="cardGrid"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot-note">
+    Records persist in your browser's Local Storage — nothing leaves this device.
+  </footer>
+</div>
+
+<!-- Confirmation Dialog -->
+<div class="dialog-overlay" id="confirmOverlay" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle">Withdraw this card?</h3>
+    <p id="confirmMessage">This will permanently remove the book from the catalog.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" id="confirmCancel">Keep It</button>
+      <button class="btn btn-danger" id="confirmDelete">Withdraw</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
